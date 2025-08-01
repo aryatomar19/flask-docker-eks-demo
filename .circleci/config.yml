@@ -1,0 +1,46 @@
+version: 2.1
+
+executors:
+  docker-executor:
+    docker:
+      - image: cimg/base:stable
+    working_directory: ~/app
+
+jobs:
+  build-and-push:
+    executor: docker-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Install AWS CLI & Docker
+          command: |
+            sudo apt update
+            sudo apt install -y awscli docker.io
+            sudo service docker start
+
+      - run:
+          name: Authenticate Docker to ECR
+          command: |
+            aws configure set aws_access_key_id $AKIAWRYMDCUD236T556N
+
+            aws configure set aws_secret_access_key $Zd1DvxCk5YY7tXspd3yKwtJyGLHuSKQTwuVN4DH
+
+            aws configure set region us-east-1
+           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
+
+      - run:
+          name: Build Docker image
+          command: docker build -t flask-app:latest .
+
+      - run:
+          name: Tag and Push Docker image to ECR
+          command: |
+            docker tag flask-app:latest $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - build-and-push
