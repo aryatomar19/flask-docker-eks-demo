@@ -2,8 +2,8 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    docker:
-      - image: cimg/base:stable
+    machine: true
+
     steps:
       - checkout
 
