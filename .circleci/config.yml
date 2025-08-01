@@ -12,12 +12,7 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Install AWS CLI & Docker
-          command: |
-            sudo apt update
-            sudo apt install -y awscli docker.io
-            sudo service docker start
+  
 
       - run:
           name: Authenticate Docker to ECR
