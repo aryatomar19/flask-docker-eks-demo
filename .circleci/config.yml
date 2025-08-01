@@ -24,7 +24,7 @@ jobs:
       - run:
           name: Authenticate Docker to ECR
           command: |
-           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
 
       - run:
           name: Build Docker image
@@ -35,18 +35,20 @@ jobs:
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Push to ECR
+          name: Push image to ECR
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Update kubeconfig for EKS
-          command: aws eks update-kubeconfig --region $us-east-1 $EKS-cluster
+          name: Configure kubeconfig for EKS
+          command: aws eks update-kubeconfig --region $us-east-1 $eks-cluster
 
       - run:
           name: Deploy to EKS
           command: kubectl apply -f k8s/
 
 workflows:
+  version: 2
   deploy-workflow:
     jobs:
       - build-and-deploy
+
