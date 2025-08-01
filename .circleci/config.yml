@@ -2,19 +2,10 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    machine: true
-
+    docker:
+      - image: cimg/aws:2023.12
     steps:
       - checkout
-
-      - run:
-          name: Install AWS CLI
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-
-      
 
       - run:
           name: Authenticate Docker to ECR
@@ -30,11 +21,11 @@ jobs:
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Push image to ECR
+          name: Push to ECR
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Configure kubeconfig for EKS
+          name: Update kubeconfig for EKS
           command: aws eks update-kubeconfig --region $us-east-1 $eks-cluster
 
       - run:
@@ -42,8 +33,8 @@ jobs:
           command: kubectl apply -f k8s/
 
 workflows:
-  version: 2
   deploy-workflow:
     jobs:
       - build-and-deploy
+
 
