@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - checkouT
+      - checkout
 
       - run:
           name: Install AWS CLI
