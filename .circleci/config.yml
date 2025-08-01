@@ -1,79 +1,40 @@
 version: 2.1
 
-executors:
-  docker-executor:
-    docker:
-      - image: cimg/base:stable
-    working_directory: ~/app
-
 jobs:
-  build-and-push:
-    executor: docker-executor
+  build-and-deploy:
+    docker:
+      - image: cimg/base:stable  # Lightweight image with curl & unzip support
     steps:
       - checkout
 
-  
+      - run:
+          name: Install AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
 
       - run:
           name: Authenticate Docker to ECR
           command: |
-            aws configure set aws_access_key_id $AKIAWRYMDCUD236T556N
-
-            aws configure set aws_secret_access_key $Zd1DvxCk5YY7tXspd3yKwtJyGLHuSKQTwuVN4DH8
-
-            aws configure set region $us-east-1
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
+           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
 
       - run:
           name: Build Docker image
-          command: docker build -t flask-app:latest .
+          command: docker build -t flask-app .
 
       - run:
-          name: Tag and Push Docker image to ECR
-          command: |
-           docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
-           docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
-        
-
-  deploy-to-eks:
-    executor: docker-executor
-    steps:
-      - checkout
+          name: Tag image
+          command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Install AWS CLI, kubectl, and eksctl
-          command: |
-            sudo apt update
-            sudo apt install -y awscli curl
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
+          name: Push to ECR
+          command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Configure AWS CLI
-          command: |
-            aws configure set aws_access_key_id $AKIAWRYMDCUD236T556N
-
-            aws configure set aws_secret_access_key $Zd1DvxCk5YY7tXspd3yKwtJyGLHuSKQTwuVN4DH8
-
-            aws configure set region $us-east-1
-
-      - run:
-          name: Update kubeconfig
-          command: |
-            aws eks update-kubeconfig --region $us-east-1 --name $eks-cluster
+          name: Update kubeconfig for EKS
+          command: aws eks update-kubeconfig --region $us-east-1 $EKS-cluster
 
       - run:
           name: Deploy to EKS
-          command: |
-            kubectl apply -f deployment.yaml
-            kubectl apply -f service.yaml
-
-workflows:
-  version: 2
-  build-deploy:
-    jobs:
-      - build-and-push
-      - deploy-to-eks:
-          requires:
-            - build-and-push
+          command: kubectl apply -f k8s/
