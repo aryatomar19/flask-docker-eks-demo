@@ -2,10 +2,22 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    docker:
-      - image: cimg/aws:2023.12
+    machine:  # This enables Docker daemon access
+      image: ubuntu-2204:2023.07.2
+    environment:
+      AWS_REGION: us-east-1  # Set your region here or in CircleCI env vars
     steps:
       - checkout
+
+      - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt update
+            sudo apt install -y unzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws --version
 
       - run:
           name: Authenticate Docker to ECR
@@ -17,7 +29,7 @@ jobs:
           command: docker build -t flask-app .
 
       - run:
-          name: Tag image
+          name: Tag Docker image
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
@@ -25,8 +37,9 @@ jobs:
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Update kubeconfig for EKS
-          command: aws eks update-kubeconfig --region $us-east-1 $eks-cluster
+          name: Configure kubectl for EKS
+          command: |
+            aws eks update-kubeconfig --region $us-east-1 $eks-cluster
 
       - run:
           name: Deploy to EKS
