@@ -27,7 +27,7 @@ jobs:
             aws configure set aws_secret_access_key $Zd1DvxCk5YY7tXspd3yKwtJyGLHuSKQTwuVN4DH8
 
             aws configure set region $us-east-1
-           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
 
       - run:
           name: Build Docker image
