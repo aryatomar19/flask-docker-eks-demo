@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build-and-deploy:
     machine:  # This enables Docker daemon access
-      image: ubuntu-2204:2023.07.2
+      enabled: true
     environment:
       AWS_REGION: us-east-1  # Set your region here or in CircleCI env vars
     steps:
