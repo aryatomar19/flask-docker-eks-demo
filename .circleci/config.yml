@@ -14,7 +14,7 @@ jobs:
       - run:
           name: Install AWS CLI
           command: |
-           set -x
+            set -x
             
             sudo apt update
             sudo apt install -y unzip curl
