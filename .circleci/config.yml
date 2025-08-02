@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  build-and-deploy:
+    build-and-deploy:
     machine: true
     environment:
       AWS_REGION: us-east-1
