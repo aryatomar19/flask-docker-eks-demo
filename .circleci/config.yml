@@ -32,7 +32,7 @@ jobs:
 
       - run:
           name: Tag Docker image
-          command:docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
+          command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
           name: Push Docker image to ECR
