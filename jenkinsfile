@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+                       aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
                     """
                 }
             }
@@ -28,19 +28,19 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${ECR_REPOSITORY}:${IMAGE_TAG} ."
+                sh "docker build -t flask-app  ."
             }
         }
 
         stage('Tag Docker Image') {
             steps {
-                sh "docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}"
+                sh "docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest}"
             }
         }
 
         stage('Push Docker Image to ECR') {
             steps {
-                sh "docker push ${ECR_URI}:${IMAGE_TAG}"
+                sh "docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest}"
             }
         }
 
