@@ -2,47 +2,46 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    machine: true  # Use full VM with Docker access
+    machine: true
     environment:
       AWS_REGION: us-east-1
       ECR_URL: 450460062983.dkr.ecr.us-east-1.amazonaws.com
-      EKS_CLUSTER: eks-cluster
+      EKS_CLUSTER: eks-cluster  # Replace with your actual EKS cluster name
 
     steps:
       - checkout
 
       - run:
-          name: Install AWS CLI
+          name: Install AWS CLI and kubectl
           command: |
             sudo apt update
-            sudo apt install -y unzip curl
+            sudo apt install -y unzip curl apt-transport-https gnupg
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip -o awscliv2.zip
+            unzip awscliv2.zip
             sudo ./aws/install --update
             aws --version
 
-      - run:
-          name: Configure AWS Credentials
-          command: |
-            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
-            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-            aws configure set default.region "$AWS_REGION"
+            # Install kubectl
+            curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+            kubectl version --client
 
       - run:
-          name: Authenticate Docker to Amazon ECR
+          name: Authenticate Docker to ECR
           command: |
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
 
       - run:
-          name: Build Docker Image
+          name: Build Docker image
           command: docker build -t flask-app .
 
       - run:
-          name: Tag Docker Image
+          name: Tag Docker image
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Push Docker Image to Amazon ECR
+          name: Push Docker image to ECR
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
@@ -52,7 +51,7 @@ jobs:
             kubectl get nodes
 
       - run:
-          name: Deploy to Kubernetes (EKS)
+          name: Deploy to EKS
           command: kubectl apply -f k8s/
 
 workflows:
