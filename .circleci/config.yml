@@ -51,7 +51,10 @@ jobs:
           name: Configure kubectl for EKS
           command: |
             aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
-            kubectl get nodes
+
+      - run:
+          name: Check IAM Identity (for debugging)
+          command: aws sts get-caller-identity
 
       - run:
           name: Deploy to EKS
