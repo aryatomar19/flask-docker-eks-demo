@@ -6,7 +6,7 @@ jobs:
     environment:
       AWS_REGION: us-east-1
       ECR_URL: 450460062983.dkr.ecr.us-east-1.amazonaws.com
-      EKS_CLUSTER: eks-cluster # <-- Change this to your actual cluster name
+      EKS_CLUSTER: eks-cluster  # Replace with your actual EKS cluster name
 
     steps:
       - checkout
@@ -32,7 +32,7 @@ jobs:
 
       - run:
           name: Tag Docker image
-          command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
+          command:docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
           name: Push Docker image to ECR
@@ -52,5 +52,6 @@ workflows:
   deploy-workflow:
     jobs:
       - build-and-deploy
+
 
 
