@@ -2,10 +2,12 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    machine:  # This enables Docker daemon access
-      enabled: true
+    machine: true  # Enables Docker daemon access
     environment:
-      AWS_REGION: us-east-1  # Set your region here or in CircleCI env vars
+      AWS_REGION: us-east-1
+      ECR_URL: 450460062983.dkr.ecr.us-east-1.amazonaws.com
+      EKS_CLUSTER: eks-cluster # <-- Change this to your actual cluster name
+
     steps:
       - checkout
 
@@ -33,13 +35,14 @@ jobs:
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Push to ECR
+          name: Push Docker image to ECR
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
           name: Configure kubectl for EKS
           command: |
-            aws eks update-kubeconfig --region $us-east-1 $eks-cluster
+            aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+            kubectl get nodes
 
       - run:
           name: Deploy to EKS
