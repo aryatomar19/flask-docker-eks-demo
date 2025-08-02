@@ -2,11 +2,11 @@ version: 2.1
 
 jobs:
   build-and-deploy:
-    machine: true  # Enables Docker daemon access
+    machine: true  # Use full VM with Docker access
     environment:
       AWS_REGION: us-east-1
       ECR_URL: 450460062983.dkr.ecr.us-east-1.amazonaws.com
-      EKS_CLUSTER: eks-cluster  # Replace with your actual EKS cluster name
+      EKS_CLUSTER: eks-cluster
 
     steps:
       - checkout
@@ -14,31 +14,35 @@ jobs:
       - run:
           name: Install AWS CLI
           command: |
-            #!/bin/bash -eo pipefail
-            set -x
-            
             sudo apt update
             sudo apt install -y unzip curl
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            unzip -o awscliv2.zip
+            sudo ./aws/install --update
             aws --version
 
       - run:
-          name: Authenticate Docker to ECR
+          name: Configure AWS Credentials
+          command: |
+            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set default.region "$AWS_REGION"
+
+      - run:
+          name: Authenticate Docker to Amazon ECR
           command: |
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 450460062983.dkr.ecr.us-east-1.amazonaws.com
 
       - run:
-          name: Build Docker image
+          name: Build Docker Image
           command: docker build -t flask-app .
 
       - run:
-          name: Tag Docker image
+          name: Tag Docker Image
           command: docker tag flask-app:latest 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
-          name: Push Docker image to ECR
+          name: Push Docker Image to Amazon ECR
           command: docker push 450460062983.dkr.ecr.us-east-1.amazonaws.com/flask-app:latest
 
       - run:
@@ -48,13 +52,14 @@ jobs:
             kubectl get nodes
 
       - run:
-          name: Deploy to EKS
+          name: Deploy to Kubernetes (EKS)
           command: kubectl apply -f k8s/
 
 workflows:
   deploy-workflow:
     jobs:
       - build-and-deploy
+
 
 
 
